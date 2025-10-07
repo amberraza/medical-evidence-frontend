@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, FileText, Loader2, AlertCircle, BookOpen, CheckCircle, Trash2, MessageSquare, Filter, X, ChevronDown, ChevronUp, History, Save, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://optimistic-sparkle-production-f85a.up.railway.app/api';
 
 // LocalStorage utilities
 const STORAGE_KEY = 'medicalEvidence_conversations';
@@ -342,12 +342,18 @@ export default function MedicalEvidenceTool() {
 
   const searchPubMed = async (query) => {
     try {
+      // Create a clean copy of filters to avoid circular reference issues
+      const cleanFilters = {
+        dateRange: filters.dateRange,
+        studyType: filters.studyType
+      };
+
       const response = await fetch(`${API_BASE_URL}/search-pubmed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query, filters })
+        body: JSON.stringify({ query, filters: cleanFilters })
       });
 
       if (!response.ok) {
@@ -401,7 +407,9 @@ export default function MedicalEvidenceTool() {
   };
 
   const handleSubmit = async (retryQuery = null) => {
-    const queryToSubmit = retryQuery || input.trim();
+    // If retryQuery is an event object (from button click), ignore it
+    const isEvent = retryQuery && typeof retryQuery === 'object' && retryQuery.nativeEvent;
+    const queryToSubmit = (isEvent || !retryQuery) ? input.trim() : retryQuery;
 
     if (!queryToSubmit || loading) return;
 

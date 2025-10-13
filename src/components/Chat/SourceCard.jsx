@@ -1,6 +1,32 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+// Color mapping for badges (Tailwind needs full class names)
+const getBadgeClasses = (color) => {
+  const colorMap = {
+    emerald: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    violet: 'bg-violet-100 text-violet-800 border-violet-200',
+    cyan: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    sky: 'bg-sky-100 text-sky-800 border-sky-200',
+    lime: 'bg-lime-100 text-lime-800 border-lime-200',
+    amber: 'bg-amber-100 text-amber-800 border-amber-200',
+  };
+  return colorMap[color] || 'bg-gray-100 text-gray-800 border-gray-200';
+};
+
+const getStrengthClasses = (color) => {
+  const strengthMap = {
+    purple: 'bg-purple-50 text-purple-900 border-purple-300',
+    green: 'bg-green-50 text-green-900 border-green-300',
+    blue: 'bg-blue-50 text-blue-900 border-blue-300',
+    amber: 'bg-amber-50 text-amber-900 border-amber-300',
+    indigo: 'bg-indigo-50 text-indigo-900 border-indigo-300',
+    slate: 'bg-slate-50 text-slate-900 border-slate-300',
+    gray: 'bg-gray-50 text-gray-900 border-gray-300',
+  };
+  return strengthMap[color] || 'bg-gray-50 text-gray-900 border-gray-300';
+};
+
 export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
   return (
     <div className="bg-gray-50 rounded p-3 text-sm">
@@ -15,6 +41,33 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
           >
             {source.title}
           </a>
+
+          {/* Quality Tags */}
+          {source.qualityTags && source.qualityTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2 mb-1">
+              {source.qualityTags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getBadgeClasses(tag.color)}`}
+                  title={tag.label}
+                >
+                  {tag.icon} {tag.label}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Evidence Strength Badge */}
+          {source.evidenceStrength && (
+            <div className="mb-2">
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${getStrengthClasses(source.evidenceStrength.color)}`}
+                title={source.evidenceStrength.description}
+              >
+                🔬 Evidence Strength: {source.evidenceStrength.strength}
+              </span>
+            </div>
+          )}
 
           {/* Metadata Badges */}
           {(source.studyType || source.isRecent || source.source || source.hasFullText) && (

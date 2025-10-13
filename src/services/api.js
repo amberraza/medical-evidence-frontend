@@ -88,6 +88,106 @@ export const searchEuropePMC = async (query, filters) => {
 };
 
 /**
+ * List of high-impact medical journals
+ */
+const HIGH_IMPACT_JOURNALS = new Set([
+  'new england journal of medicine',
+  'nejm',
+  'lancet',
+  'jama',
+  'british medical journal',
+  'bmj',
+  'nature medicine',
+  'nature',
+  'science',
+  'cell',
+  'plos medicine',
+  'annals of internal medicine',
+  'circulation',
+  'journal of clinical oncology',
+  'american journal of respiratory and critical care medicine',
+  'diabetes care',
+  'neurology',
+  'gastroenterology',
+  'gut',
+  'kidney international',
+  'hepatology',
+  'chest',
+  'journal of the american college of cardiology',
+  'european heart journal',
+  'cochrane database of systematic reviews'
+]);
+
+/**
+ * Calculate evidence strength based on study type
+ * @param {Object} article - Article object
+ * @returns {Object} Evidence strength info
+ */
+const calculateEvidenceStrength = (article) => {
+  const studyType = article.studyType;
+
+  // Evidence pyramid (highest to lowest)
+  const strengthMap = {
+    'Meta-Analysis': { level: 1, strength: 'Very High', color: 'purple', description: 'Systematic analysis of multiple studies' },
+    'Systematic Review': { level: 1, strength: 'Very High', color: 'purple', description: 'Comprehensive review of all evidence' },
+    'RCT': { level: 2, strength: 'High', color: 'green', description: 'Randomized controlled trial' },
+    'Clinical Trial': { level: 3, strength: 'Moderate-High', color: 'blue', description: 'Controlled clinical study' },
+    'Guideline': { level: 2, strength: 'High', color: 'amber', description: 'Expert clinical recommendations' },
+    'Review': { level: 3, strength: 'Moderate', color: 'indigo', description: 'Literature review' },
+    'Case Report': { level: 5, strength: 'Low', color: 'gray', description: 'Individual case study' },
+    'Observational Study': { level: 4, strength: 'Moderate-Low', color: 'slate', description: 'Observational research' },
+    'Research Article': { level: 4, strength: 'Moderate', color: 'slate', description: 'Original research' }
+  };
+
+  return strengthMap[studyType] || { level: 5, strength: 'Moderate', color: 'gray', description: 'Research study' };
+};
+
+/**
+ * Calculate quality tags for an article
+ * @param {Object} article - Article object
+ * @param {string} query - User's search query
+ * @returns {Array} Array of quality tag objects
+ */
+const calculateQualityTags = (article, query) => {
+  const tags = [];
+
+  // High relevance tag (based on relevance score)
+  if (article.relevanceScore >= 80) {
+    tags.push({ label: 'Highly Relevant', color: 'emerald', icon: '⭐' });
+  }
+
+  // Leading journal tag
+  const journalLower = (article.journal || '').toLowerCase();
+  if (HIGH_IMPACT_JOURNALS.has(journalLower)) {
+    tags.push({ label: 'Leading Journal', color: 'violet', icon: '🏆' });
+  }
+
+  // New research tag (already exists but we'll enhance it)
+  if (article.isRecent) {
+    tags.push({ label: 'New Research', color: 'cyan', icon: '🆕' });
+  }
+
+  // Recent research (within 2 years but not brand new)
+  const currentYear = new Date().getFullYear();
+  if (article.publicationYear >= currentYear - 2 && !article.isRecent) {
+    tags.push({ label: 'Recent', color: 'sky', icon: '📅' });
+  }
+
+  // Full text available
+  if (article.hasFullText) {
+    tags.push({ label: 'Full Text', color: 'lime', icon: '📄' });
+  }
+
+  // High citation potential (well-established studies)
+  const yearsOld = currentYear - article.publicationYear;
+  if (yearsOld >= 3 && yearsOld <= 10 && ['Meta-Analysis', 'Systematic Review', 'RCT'].includes(article.studyType)) {
+    tags.push({ label: 'Well-Established', color: 'amber', icon: '📚' });
+  }
+
+  return tags;
+};
+
+/**
  * Calculate relevance score for an article based on query
  * @param {Object} article - Article object
  * @param {string} query - User's search query
@@ -218,9 +318,11 @@ export const searchMultipleSources = async (query, filters, sources = ['pubmed',
       return true;
     });
 
-    // Calculate relevance scores for each article
+    // Calculate relevance scores and quality indicators for each article
     deduplicated.forEach(article => {
       article.relevanceScore = calculateRelevanceScore(article, query);
+      article.evidenceStrength = calculateEvidenceStrength(article);
+      article.qualityTags = calculateQualityTags(article, query);
     });
 
     // Filter out only very low-relevance articles (score < 15)

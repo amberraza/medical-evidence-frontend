@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Loader2, Filter, X } from 'lucide-react';
+import { Search, Loader2, Filter, X, Sparkles } from 'lucide-react';
 import { FilterPanel } from './FilterPanel';
 
 export const SearchInput = ({
@@ -11,6 +11,8 @@ export const SearchInput = ({
   setFilters,
   showFilters,
   setShowFilters,
+  deepResearchMode,
+  setDeepResearchMode,
   onSubmit,
   onKeyPress
 }) => {
@@ -24,13 +26,31 @@ export const SearchInput = ({
           setFilters={setFilters}
         />
 
+        {/* Deep Research Mode Toggle */}
+        {deepResearchMode !== undefined && (
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              onClick={() => setDeepResearchMode(!deepResearchMode)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                deepResearchMode
+                  ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-transparent'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              Deep Research Mode
+              {deepResearchMode && <span className="text-xs">(Multi-stage AI analysis)</span>}
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2 sm:gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={onKeyPress}
-            placeholder="Ask a medical question..."
+            placeholder={deepResearchMode ? "Ask a research question for deep analysis..." : "Ask a medical question..."}
             className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
             disabled={loading || backendStatus !== 'connected'}
           />
@@ -53,12 +73,21 @@ export const SearchInput = ({
           <button
             onClick={onSubmit}
             disabled={loading || !input.trim() || backendStatus !== 'connected'}
-            className="bg-indigo-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2"
+            className={`${
+              deepResearchMode
+                ? 'bg-purple-600 hover:bg-purple-700'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+            } text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2`}
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                 <span className="hidden sm:inline">Processing</span>
+              </>
+            ) : deepResearchMode ? (
+              <>
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Deep Research</span>
               </>
             ) : (
               <>

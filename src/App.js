@@ -8,7 +8,7 @@ import { AssistantMessage } from './components/Chat/AssistantMessage';
 import { LoadingIndicator } from './components/Common/LoadingIndicator';
 import { ErrorMessage } from './components/Common/ErrorMessage';
 import { SearchInput } from './components/Input/SearchInput';
-import { DeepResearchPanel, DeepResearchProgress } from './components/Research/DeepResearchPanel';
+import { DeepResearchProgress } from './components/Research/DeepResearchPanel';
 import { ClinicalCalculators } from './components/Calculators/ClinicalCalculators';
 import * as api from './services/api';
 
@@ -48,6 +48,7 @@ export default function MedicalEvidenceTool() {
   const [deepResearchLoading, setDeepResearchLoading] = useState(false);
   const [deepResearchStage, setDeepResearchStage] = useState(null);
   const [deepResearchQuery, setDeepResearchQuery] = useState('');
+  const [deepResearchMode, setDeepResearchMode] = useState(false);
   const [showCalculators, setShowCalculators] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -96,6 +97,12 @@ export default function MedicalEvidenceTool() {
         role: 'user',
         content: userMessage
       }]);
+    }
+
+    // If deep research mode is enabled, use the dedicated handler
+    if (deepResearchMode) {
+      await handleDeepResearch();
+      return;
     }
 
     setLoading(true);
@@ -187,21 +194,15 @@ export default function MedicalEvidenceTool() {
 
   // Deep Research handler
   const handleDeepResearch = async () => {
-    if (!input.trim()) return;
-
+    // Note: User message is already added by handleSubmit
     const query = input.trim();
+    if (!query) return;
+
     setDeepResearchLoading(true);
     setDeepResearchQuery(query);
     setError(null);
 
     try {
-      // Add user message
-      setMessages(prev => [...prev, {
-        role: 'user',
-        content: query
-      }]);
-      setInput('');
-
       // Stage 1: Initial search
       setDeepResearchStage('initial');
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -281,13 +282,6 @@ export default function MedicalEvidenceTool() {
             </>
           )}
 
-          {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && !loading && !deepResearchLoading && (
-            <DeepResearchPanel
-              onStartDeepResearch={handleDeepResearch}
-              loading={deepResearchLoading}
-            />
-          )}
-
           {messages.map((msg, idx) => (
             msg.role === 'user' ? (
               <UserMessage key={idx} content={msg.content} />
@@ -330,12 +324,14 @@ export default function MedicalEvidenceTool() {
       <SearchInput
         input={input}
         setInput={setInput}
-        loading={loading}
+        loading={loading || deepResearchLoading}
         backendStatus={backendStatus}
         filters={filters}
         setFilters={setFilters}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
+        deepResearchMode={deepResearchMode}
+        setDeepResearchMode={setDeepResearchMode}
         onSubmit={handleSubmit}
         onKeyPress={handleKeyPress}
       />

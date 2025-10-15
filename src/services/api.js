@@ -409,3 +409,37 @@ export const generateResponse = async (userQuery, articles, conversationHistory)
     throw err;
   }
 };
+
+/**
+ * Perform deep research with multi-stage analysis
+ * @param {string} query - Research question
+ * @param {Object} filters - Search filters
+ * @returns {Promise<Object>} Deep research results
+ */
+export const performDeepResearch = async (query, filters = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/deep-research`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        filters
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Deep research failed: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error('Deep research error:', err);
+    throw err;
+  }
+};

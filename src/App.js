@@ -8,6 +8,8 @@ import { AssistantMessage } from './components/Chat/AssistantMessage';
 import { LoadingIndicator } from './components/Common/LoadingIndicator';
 import { ErrorMessage } from './components/Common/ErrorMessage';
 import { SearchInput } from './components/Input/SearchInput';
+import { DeepResearchPanel, DeepResearchProgress } from './components/Research/DeepResearchPanel';
+import { ClinicalCalculators } from './components/Calculators/ClinicalCalculators';
 import * as api from './services/api';
 
 export default function MedicalEvidenceTool() {
@@ -43,6 +45,10 @@ export default function MedicalEvidenceTool() {
   const [expandedSources, setExpandedSources] = useState({});
   const [showHistory, setShowHistory] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [deepResearchLoading, setDeepResearchLoading] = useState(false);
+  const [deepResearchStage, setDeepResearchStage] = useState(null);
+  const [deepResearchQuery, setDeepResearchQuery] = useState('');
+  const [showCalculators, setShowCalculators] = useState(false);
   const messagesEndRef = useRef(null);
 
   const toggleSource = (messageIndex, sourceIndex) => {
@@ -179,6 +185,65 @@ export default function MedicalEvidenceTool() {
     setShowHistory(false);
   };
 
+  // Deep Research handler
+  const handleDeepResearch = async () => {
+    if (!input.trim()) return;
+
+    const query = input.trim();
+    setDeepResearchLoading(true);
+    setDeepResearchQuery(query);
+    setError(null);
+
+    try {
+      // Add user message
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: query
+      }]);
+      setInput('');
+
+      // Stage 1: Initial search
+      setDeepResearchStage('initial');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Stage 2: Analysis
+      setDeepResearchStage('analysis');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Stage 3: Follow-up
+      setDeepResearchStage('followup');
+
+      // Perform deep research
+      const result = await api.performDeepResearch(query, filters);
+
+      // Stage 4: Synthesis
+      setDeepResearchStage('synthesis');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Add deep research result as assistant message
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: result.synthesis,
+        sources: result.initialArticles,
+        deepResearch: {
+          followUpQuestions: result.followUpQuestions,
+          followUpResults: result.followUpResults,
+          totalArticles: result.totalArticlesAnalyzed
+        }
+      }]);
+
+    } catch (err) {
+      const errorData = err.response?.data;
+      const errorMessage = errorData?.error || 'Deep research failed. Please try again.';
+      setError(errorMessage);
+      console.error(err);
+    } finally {
+      setDeepResearchLoading(false);
+      setDeepResearchStage(null);
+      setDeepResearchQuery('');
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Header
@@ -200,7 +265,28 @@ export default function MedicalEvidenceTool() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          {messages.length === 0 && <EmptyState />}
+          {messages.length === 0 && (
+            <>
+              <EmptyState />
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowCalculators(!showCalculators)}
+                  className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  {showCalculators ? 'Hide' : 'Show'} Clinical Calculators
+                </button>
+              </div>
+              {showCalculators && <ClinicalCalculators />}
+            </>
+          )}
+
+          {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && !loading && !deepResearchLoading && (
+            <DeepResearchPanel
+              onStartDeepResearch={handleDeepResearch}
+              loading={deepResearchLoading}
+            />
+          )}
 
           {messages.map((msg, idx) => (
             msg.role === 'user' ? (
@@ -221,6 +307,14 @@ export default function MedicalEvidenceTool() {
           ))}
 
           {loading && <LoadingIndicator loadingStage={loadingStage} articleCount={articleCount} />}
+
+          {deepResearchLoading && (
+            <DeepResearchProgress
+              stage={deepResearchStage}
+              currentQuery={deepResearchQuery}
+              completedStages={[]}
+            />
+          )}
 
           <ErrorMessage
             error={error}

@@ -13,6 +13,8 @@ import { ClinicalCalculators } from './components/Calculators/ClinicalCalculator
 import { DocumentUpload } from './components/Document/DocumentUpload';
 import { DrugInfo } from './components/DrugInfo/DrugInfo';
 import { ClinicalGuidelines } from './components/Guidelines/ClinicalGuidelines';
+import { EvidenceAlerts } from './components/Alerts/EvidenceAlerts';
+import { VisitNotes } from './components/VisitNotes/VisitNotes';
 import * as api from './services/api';
 
 export default function MedicalEvidenceTool() {
@@ -56,6 +58,8 @@ export default function MedicalEvidenceTool() {
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showDrugInfo, setShowDrugInfo] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
+  const [showVisitNotes, setShowVisitNotes] = useState(false);
   const messagesEndRef = useRef(null);
 
   const toggleSource = (messageIndex, sourceIndex) => {
@@ -378,6 +382,20 @@ export default function MedicalEvidenceTool() {
                 <span>📚</span>
                 {showGuidelines ? 'Hide' : 'Show'} Clinical Guidelines
               </button>
+              <button
+                onClick={() => setShowAlerts(!showAlerts)}
+                className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>🔔</span>
+                {showAlerts ? 'Hide' : 'Show'} Evidence Alerts
+              </button>
+              <button
+                onClick={() => setShowVisitNotes(!showVisitNotes)}
+                className="px-4 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>📝</span>
+                {showVisitNotes ? 'Hide' : 'Show'} Visit Notes
+              </button>
             </div>
             {showCalculators && <ClinicalCalculators />}
             {showDocumentUpload && (
@@ -388,6 +406,8 @@ export default function MedicalEvidenceTool() {
             )}
             {showDrugInfo && <DrugInfo />}
             {showGuidelines && <ClinicalGuidelines />}
+            {showAlerts && <EvidenceAlerts />}
+            {showVisitNotes && <VisitNotes />}
           </div>
 
           {messages.map((msg, idx) => (

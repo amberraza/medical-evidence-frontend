@@ -556,3 +556,134 @@ export const searchGuidelines = async (query, organization = 'all') => {
     throw err;
   }
 };
+
+/**
+ * Create a new evidence alert
+ * @param {Object} alert - Alert object
+ * @returns {Promise<Object>} Created alert
+ */
+export const createEvidenceAlert = async (alert) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/alerts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(alert)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to create alert: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Create alert error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Update an existing evidence alert
+ * @param {Object} alert - Alert object with updates
+ * @returns {Promise<Object>} Updated alert
+ */
+export const updateEvidenceAlert = async (alert) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/alerts/${alert.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(alert)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to update alert: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Update alert error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Delete an evidence alert
+ * @param {string} alertId - Alert ID
+ * @returns {Promise<Object>} Delete confirmation
+ */
+export const deleteEvidenceAlert = async (alertId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to delete alert: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Delete alert error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Check for new evidence for a specific alert
+ * @param {string} alertId - Alert ID
+ * @returns {Promise<Object>} New articles found
+ */
+export const checkEvidenceAlert = async (alertId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/check`, {
+      method: 'POST'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to check alert: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Check alert error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Generate a structured visit note from transcription
+ * @param {string} transcription - Visit conversation transcription
+ * @returns {Promise<Object>} Generated SOAP note
+ */
+export const generateVisitNote = async (transcription) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/generate-visit-note`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcription })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to generate visit note: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Generate visit note error:', err);
+    throw err;
+  }
+};

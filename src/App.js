@@ -10,6 +10,9 @@ import { ErrorMessage } from './components/Common/ErrorMessage';
 import { SearchInput } from './components/Input/SearchInput';
 import { DeepResearchProgress } from './components/Research/DeepResearchPanel';
 import { ClinicalCalculators } from './components/Calculators/ClinicalCalculators';
+import { DocumentUpload } from './components/Document/DocumentUpload';
+import { DrugInfo } from './components/DrugInfo/DrugInfo';
+import { ClinicalGuidelines } from './components/Guidelines/ClinicalGuidelines';
 import * as api from './services/api';
 
 export default function MedicalEvidenceTool() {
@@ -50,6 +53,9 @@ export default function MedicalEvidenceTool() {
   const [deepResearchQuery, setDeepResearchQuery] = useState('');
   const [deepResearchMode, setDeepResearchMode] = useState(false);
   const [showCalculators, setShowCalculators] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showDrugInfo, setShowDrugInfo] = useState(false);
+  const [showGuidelines, setShowGuidelines] = useState(false);
   const messagesEndRef = useRef(null);
 
   const toggleSource = (messageIndex, sourceIndex) => {
@@ -245,6 +251,79 @@ export default function MedicalEvidenceTool() {
     }
   };
 
+  // Document analysis handler
+  const handleAnalyzeDocument = async (file) => {
+    try {
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: `📄 Analyzing document: ${file.name}`
+      }]);
+
+      // Add loading message
+      const loadingMessageId = Date.now();
+      setMessages(prev => [...prev, {
+        id: loadingMessageId,
+        role: 'assistant',
+        content: '🔄 Extracting text from document and analyzing with AI...',
+        isLoading: true,
+        sources: []
+      }]);
+
+      const result = await api.analyzeDocument(file);
+
+      // Replace loading message with actual result
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessageId));
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: result.analysis,
+        sources: []
+      }]);
+    } catch (err) {
+      // Remove loading message on error
+      setMessages(prev => prev.filter(msg => !msg.isLoading));
+      setError(err.message || 'Failed to analyze document');
+      console.error(err);
+    }
+  };
+
+  // Find similar papers handler
+  const handleFindSimilar = async (file) => {
+    try {
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: `🔍 Finding papers similar to: ${file.name}`
+      }]);
+
+      // Add loading message
+      const loadingMessageId = Date.now();
+      setMessages(prev => [...prev, {
+        id: loadingMessageId,
+        role: 'assistant',
+        content: '🔄 Extracting key concepts from document and searching medical databases...',
+        isLoading: true,
+        sources: []
+      }]);
+
+      const result = await api.findSimilarPapers(file);
+
+      // Replace loading message with actual result
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessageId));
+
+      const responseText = `# Similar Papers Found\n\nSearch query used: **${result.searchQuery}**\n\nFound ${result.totalFound} similar papers. Showing top ${result.papers.length}:`;
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: responseText,
+        sources: result.papers
+      }]);
+    } catch (err) {
+      // Remove loading message on error
+      setMessages(prev => prev.filter(msg => !msg.isLoading));
+      setError(err.message || 'Failed to find similar papers');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Header
@@ -266,21 +345,50 @@ export default function MedicalEvidenceTool() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          {messages.length === 0 && (
-            <>
-              <EmptyState />
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setShowCalculators(!showCalculators)}
-                  className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium flex items-center gap-2"
-                >
-                  <span>📊</span>
-                  {showCalculators ? 'Hide' : 'Show'} Clinical Calculators
-                </button>
-              </div>
-              {showCalculators && <ClinicalCalculators />}
-            </>
-          )}
+          {messages.length === 0 && <EmptyState />}
+
+          {/* Always visible tools section */}
+          <div className="space-y-4">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <button
+                onClick={() => setShowCalculators(!showCalculators)}
+                className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>📊</span>
+                {showCalculators ? 'Hide' : 'Show'} Clinical Calculators
+              </button>
+              <button
+                onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>📄</span>
+                {showDocumentUpload ? 'Hide' : 'Show'} Document Analysis
+              </button>
+              <button
+                onClick={() => setShowDrugInfo(!showDrugInfo)}
+                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>💊</span>
+                {showDrugInfo ? 'Hide' : 'Show'} Drug Information
+              </button>
+              <button
+                onClick={() => setShowGuidelines(!showGuidelines)}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium flex items-center gap-2"
+              >
+                <span>📚</span>
+                {showGuidelines ? 'Hide' : 'Show'} Clinical Guidelines
+              </button>
+            </div>
+            {showCalculators && <ClinicalCalculators />}
+            {showDocumentUpload && (
+              <DocumentUpload
+                onAnalyze={handleAnalyzeDocument}
+                onFindSimilar={handleFindSimilar}
+              />
+            )}
+            {showDrugInfo && <DrugInfo />}
+            {showGuidelines && <ClinicalGuidelines />}
+          </div>
 
           {messages.map((msg, idx) => (
             msg.role === 'user' ? (
@@ -296,6 +404,7 @@ export default function MedicalEvidenceTool() {
                 onToggleSource={toggleSource}
                 onFollowUpClick={setInput}
                 scrollToBottom={scrollToBottom}
+                isLoading={msg.isLoading}
               />
             )
           ))}

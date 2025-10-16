@@ -443,3 +443,116 @@ export const performDeepResearch = async (query, filters = {}) => {
     throw err;
   }
 };
+
+/**
+ * Analyze uploaded document
+ * @param {File} file - Document file (PDF or TXT)
+ * @returns {Promise<Object>} Analysis results
+ */
+export const analyzeDocument = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('document', file);
+
+    const response = await fetch(`${API_BASE_URL}/analyze-document`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Document analysis failed: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Document analysis error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Find similar papers to uploaded document
+ * @param {File} file - Document file (PDF or TXT)
+ * @returns {Promise<Object>} Similar papers
+ */
+export const findSimilarPapers = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('document', file);
+
+    const response = await fetch(`${API_BASE_URL}/find-similar`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to find similar papers: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Find similar papers error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Get comprehensive drug information
+ * @param {string} drugName - Name of the drug
+ * @returns {Promise<Object>} Drug information object
+ */
+export const getDrugInfo = async (drugName) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/drug-info`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drugName })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to fetch drug information: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Drug info error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Search for clinical practice guidelines
+ * @param {string} query - Search query
+ * @param {string} organization - Organization filter
+ * @returns {Promise<Object>} Guidelines search results
+ */
+export const searchGuidelines = async (query, organization = 'all') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/search-guidelines`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, organization })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to search guidelines: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Guidelines search error:', err);
+    throw err;
+  }
+};

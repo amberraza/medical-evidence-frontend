@@ -15,6 +15,8 @@ import { DrugInfo } from './components/DrugInfo/DrugInfo';
 import { ClinicalGuidelines } from './components/Guidelines/ClinicalGuidelines';
 import { EvidenceAlerts } from './components/Alerts/EvidenceAlerts';
 import { VisitNotes } from './components/VisitNotes/VisitNotes';
+import { ClaudeLayout, ClaudeGreeting, ClaudeChatInput } from './components/Layout/ClaudeLayout';
+import { ClaudeSidebar } from './components/Layout/ClaudeSidebar';
 import * as api from './services/api';
 
 export default function MedicalEvidenceTool() {
@@ -60,6 +62,17 @@ export default function MedicalEvidenceTool() {
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
   const [showVisitNotes, setShowVisitNotes] = useState(false);
+  const [newExperience, setNewExperience] = useState(true); // Toggle for new UI
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState(() => {
+    // Load user name from localStorage, default to "User"
+    return localStorage.getItem('medicalEvidenceUserName') || 'User';
+  });
+  const [showNamePrompt, setShowNamePrompt] = useState(() => {
+    // Show name prompt if never set before
+    return !localStorage.getItem('medicalEvidenceUserName');
+  });
+  const [tempUserName, setTempUserName] = useState('');
   const messagesEndRef = useRef(null);
 
   const toggleSource = (messageIndex, sourceIndex) => {
@@ -72,6 +85,13 @@ export default function MedicalEvidenceTool() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSaveUserName = () => {
+    const name = tempUserName.trim() || 'User';
+    setUserName(name);
+    localStorage.setItem('medicalEvidenceUserName', name);
+    setShowNamePrompt(false);
   };
 
   useEffect(() => {
@@ -377,6 +397,205 @@ export default function MedicalEvidenceTool() {
     }
   };
 
+  // Render New Claude-style UI
+  if (newExperience) {
+    return (
+      <>
+        {/* Name Prompt Modal */}
+        {showNamePrompt && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
+            <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-8 max-w-md w-full mx-4">
+              <h2 className="text-2xl font-bold text-gray-100 mb-4">Welcome! 👋</h2>
+              <p className="text-gray-300 mb-6">What should we call you?</p>
+              <input
+                type="text"
+                value={tempUserName}
+                onChange={(e) => setTempUserName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveUserName()}
+                placeholder="Enter your name"
+                className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 mb-6"
+                autoFocus
+              />
+              <button
+                onClick={handleSaveUserName}
+                className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
+        <ClaudeLayout
+          userName={userName}
+          onToggleExperience={() => setNewExperience(false)}
+          onOpenSidebar={() => setSidebarOpen(true)}
+        >
+          <ClaudeSidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            onNewChat={handleStartNewConversation}
+            savedConversations={savedConversations}
+            currentConversationId={currentConversationId}
+            onLoadConversation={handleLoadConversation}
+            onDeleteConversation={deleteConversation}
+            onOpenCalculators={() => { setShowCalculators(!showCalculators); setSidebarOpen(false); }}
+            onOpenDocumentUpload={() => { setShowDocumentUpload(!showDocumentUpload); setSidebarOpen(false); }}
+            onOpenDrugInfo={() => { setShowDrugInfo(!showDrugInfo); setSidebarOpen(false); }}
+            onOpenGuidelines={() => { setShowGuidelines(!showGuidelines); setSidebarOpen(false); }}
+            onOpenAlerts={() => { setShowAlerts(!showAlerts); setSidebarOpen(false); }}
+            onOpenVisitNotes={() => { setShowVisitNotes(!showVisitNotes); setSidebarOpen(false); }}
+            userName={userName}
+          />
+
+        {/* Main Content Area */}
+        <div className="flex flex-col h-full">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto pb-32">
+            {messages.length === 0 && !showCalculators && !showDocumentUpload && !showDrugInfo && !showGuidelines && !showAlerts && !showVisitNotes ? (
+              <ClaudeGreeting
+                userName={userName}
+                onToolClick={(tool) => {
+                  if (tool === 'calculators') setShowCalculators(true);
+                  else if (tool === 'document') setShowDocumentUpload(true);
+                  else if (tool === 'drug') setShowDrugInfo(true);
+                  else if (tool === 'guidelines') setShowGuidelines(true);
+                  else if (tool === 'alerts') setShowAlerts(true);
+                  else if (tool === 'visitNotes') setShowVisitNotes(true);
+                }}
+              />
+            ) : (
+              <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+                {/* Inline Tools */}
+                {showCalculators && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">📊 Clinical Calculators</h2>
+                      <button onClick={() => setShowCalculators(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <ClinicalCalculators />
+                  </div>
+                )}
+
+                {showDocumentUpload && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">📄 Document Analysis</h2>
+                      <button onClick={() => setShowDocumentUpload(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <DocumentUpload onAnalyze={handleAnalyzeDocument} onFindSimilar={handleFindSimilar} />
+                  </div>
+                )}
+
+                {showDrugInfo && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">💊 Drug Information</h2>
+                      <button onClick={() => setShowDrugInfo(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <DrugInfo />
+                  </div>
+                )}
+
+                {showGuidelines && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">📚 Clinical Guidelines</h2>
+                      <button onClick={() => setShowGuidelines(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <ClinicalGuidelines />
+                  </div>
+                )}
+
+                {showAlerts && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">🔔 Evidence Alerts</h2>
+                      <button onClick={() => setShowAlerts(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <EvidenceAlerts />
+                  </div>
+                )}
+
+                {showVisitNotes && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-gray-100">📝 Visit Notes</h2>
+                      <button onClick={() => setShowVisitNotes(false)} className="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+                    <VisitNotes />
+                  </div>
+                )}
+
+                {/* Chat Messages */}
+                {messages.map((msg, idx) => (
+                  msg.role === 'user' ? (
+                    <div key={idx} className="flex justify-end">
+                      <div className="bg-gray-800 text-white rounded-2xl px-4 py-3 max-w-2xl">
+                        <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <AssistantMessage
+                      key={idx}
+                      content={msg.content}
+                      sources={msg.sources}
+                      followUpQuestions={msg.followUpQuestions}
+                      suggestions={msg.suggestions}
+                      messageIndex={idx}
+                      expandedSources={expandedSources}
+                      onToggleSource={toggleSource}
+                      onFollowUpClick={setInput}
+                      scrollToBottom={scrollToBottom}
+                      isLoading={msg.isLoading}
+                      darkMode={true}
+                    />
+                  )
+                ))}
+
+                {loading && <LoadingIndicator loadingStage={loadingStage} articleCount={articleCount} />}
+
+                {deepResearchLoading && (
+                  <DeepResearchProgress
+                    stage={deepResearchStage}
+                    currentQuery={deepResearchQuery}
+                    completedStages={[]}
+                  />
+                )}
+
+                {error && (
+                  <ErrorMessage
+                    error={error}
+                    errorRetryable={errorRetryable}
+                    lastQuery={lastQuery}
+                    onRetry={handleSubmit}
+                  />
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* Chat Input */}
+          <ClaudeChatInput
+            value={input}
+            onChange={setInput}
+            onSubmit={handleSubmit}
+            disabled={loading || deepResearchLoading}
+            placeholder="How can I help you today?"
+            deepResearchMode={deepResearchMode}
+            onToggleDeepResearch={() => setDeepResearchMode(!deepResearchMode)}
+            filters={filters}
+            setFilters={setFilters}
+          />
+        </div>
+      </ClaudeLayout>
+      </>
+    );
+  }
+
+  // Render Classic UI
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <Header
@@ -394,6 +613,16 @@ export default function MedicalEvidenceTool() {
         saveCurrentConversation={saveCurrentConversation}
         clearChat={clearChat}
       />
+
+      {/* Toggle UI Button in Classic UI */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => setNewExperience(true)}
+          className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-lg"
+        >
+          Try New UI
+        </button>
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">

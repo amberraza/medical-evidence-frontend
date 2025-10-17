@@ -118,7 +118,7 @@ export const ClinicalGuidelines = () => {
       <form onSubmit={handleSearch} className="mb-6">
         <div className="flex flex-col gap-3">
           {/* Organization Filter */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
               Organization:
             </label>
@@ -135,29 +135,30 @@ export const ClinicalGuidelines = () => {
           </div>
 
           {/* Search Input */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter condition or topic (e.g., Heart Failure, Diabetes Management)"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               disabled={searching}
             />
             <button
               type="submit"
               disabled={searching || !query.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
             >
               {searching ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Searching...
+                  <span className="hidden sm:inline">Searching...</span>
+                  <span className="sm:hidden">Search...</span>
                 </>
               ) : (
                 <>
                   <Search className="w-5 h-5" />
-                  Search
+                  <span>Search</span>
                 </>
               )}
             </button>

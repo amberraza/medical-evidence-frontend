@@ -8,6 +8,7 @@ export const AssistantMessage = ({
   content,
   sources,
   followUpQuestions,
+  suggestions,
   messageIndex,
   expandedSources,
   onToggleSource,
@@ -67,6 +68,31 @@ export const AssistantMessage = ({
                   />
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {suggestions && suggestions.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="font-semibold text-gray-900 text-sm mb-3">💡 Suggested Alternative Queries:</h3>
+            <div className="space-y-2">
+              {suggestions.map((sug, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    onFollowUpClick(sug.query);
+                    scrollToBottom();
+                  }}
+                  className="w-full text-left px-4 py-3 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors group"
+                >
+                  <div className="font-medium text-indigo-900 group-hover:text-indigo-700 mb-1">
+                    {idx + 1}. {sug.query}
+                  </div>
+                  <div className="text-sm text-indigo-700 italic">
+                    {sug.reason}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}

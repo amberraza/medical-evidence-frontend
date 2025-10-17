@@ -120,18 +120,60 @@ export default function MedicalEvidenceTool() {
     setArticleCount(0);
 
     try {
+      // Stage 0: Preprocess query to optimize for medical literature search
+      let searchQuery = userMessage;
+      try {
+        const preprocessResult = await api.preprocessQuery(userMessage);
+        searchQuery = preprocessResult.optimizedQuery;
+        console.log(`Original query: "${userMessage}"`);
+        console.log(`Optimized query: "${searchQuery}"`);
+      } catch (preprocessErr) {
+        console.warn('Query preprocessing failed, using original query:', preprocessErr);
+        // Continue with original query if preprocessing fails
+      }
+
       // Stage 1: Search multiple sources (PubMed + Europe PMC)
-      const articles = await api.searchMultipleSources(userMessage, filters, ['pubmed', 'europepmc']);
+      const searchResults = await api.searchMultipleSources(searchQuery, filters, ['pubmed', 'europepmc']);
+      const articles = searchResults.articles || [];
+      const confidence = searchResults.confidence || 'high';
+      const confidenceMessage = searchResults.confidenceMessage;
 
       if (articles.length === 0) {
+        // Generate smart query suggestions
+        setLoadingStage('generating');
+        let suggestions = [];
+        try {
+          const suggestionsResult = await api.getQuerySuggestions(userMessage);
+          suggestions = suggestionsResult.suggestions || [];
+        } catch (suggErr) {
+          console.warn('Query suggestions failed:', suggErr);
+        }
+
+        let noResultsMessage = 'I couldn\'t find relevant medical literature for your query.';
+
+        if (suggestions.length > 0) {
+          noResultsMessage += '\n\n**Try these alternative searches:**\n\n';
+          suggestions.forEach((sug, idx) => {
+            noResultsMessage += `${idx + 1}. **${sug.query}**\n   *${sug.reason}*\n\n`;
+          });
+        } else {
+          noResultsMessage += '\n\nPlease try:\n- Using standard medical terminology\n- Being more specific about the condition or treatment\n- Removing exam-style formatting (A, B, C, D, E)\n- Focusing on clinical aspects rather than demographics';
+        }
+
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: 'I couldn\'t find relevant medical literature for your query. Please try rephrasing your question or being more specific about the medical topic you\'re interested in.',
-          sources: []
+          content: noResultsMessage,
+          sources: [],
+          suggestions: suggestions
         }]);
         setLoading(false);
         setLoadingStage(null);
         return;
+      }
+
+      // Show confidence warning if applicable
+      if (confidenceMessage) {
+        console.log(confidenceMessage);
       }
 
       // Stage 2: Found articles
@@ -152,11 +194,18 @@ export default function MedicalEvidenceTool() {
 
       const responseData = await api.generateResponse(userMessage, articles, conversationHistory);
 
+      // Prepend confidence message if present
+      let responseContent = responseData.response || responseData;
+      if (confidenceMessage) {
+        responseContent = `${confidenceMessage}\n\n${responseContent}`;
+      }
+
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: responseData.response || responseData,
+        content: responseContent,
         sources: articles,
-        followUpQuestions: responseData.followUpQuestions || []
+        followUpQuestions: responseData.followUpQuestions || [],
+        searchConfidence: confidence
       }]);
 
       setLastQuery(null); // Clear last query on success
@@ -419,6 +468,7 @@ export default function MedicalEvidenceTool() {
                 content={msg.content}
                 sources={msg.sources}
                 followUpQuestions={msg.followUpQuestions}
+                suggestions={msg.suggestions}
                 messageIndex={idx}
                 expandedSources={expandedSources}
                 onToggleSource={toggleSource}

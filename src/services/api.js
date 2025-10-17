@@ -325,11 +325,36 @@ export const searchMultipleSources = async (query, filters, sources = ['pubmed',
       article.qualityTags = calculateQualityTags(article, query);
     });
 
-    // Filter out only very low-relevance articles (score < 15)
-    // Lower threshold to avoid filtering out too many results
-    const relevantArticles = deduplicated.filter(article => article.relevanceScore >= 15);
+    // Apply adaptive relevance threshold
+    // Tier 1: High confidence (score >= 15)
+    let relevantArticles = deduplicated.filter(article => article.relevanceScore >= 15);
+    let confidence = 'high';
+    let confidenceMessage = null;
 
-    console.log(`Articles before filtering: ${deduplicated.length}, after filtering: ${relevantArticles.length}`);
+    if (relevantArticles.length === 0 && deduplicated.length > 0) {
+      // Tier 2: Medium confidence (score >= 10)
+      relevantArticles = deduplicated.filter(article => article.relevanceScore >= 10);
+
+      if (relevantArticles.length > 0) {
+        confidence = 'medium';
+        confidenceMessage = '⚠️ Limited highly-relevant results found. Showing related articles with lower confidence scores.';
+      } else {
+        // Tier 3: Low confidence (score >= 5)
+        relevantArticles = deduplicated.filter(article => article.relevanceScore >= 5);
+
+        if (relevantArticles.length > 0) {
+          confidence = 'low';
+          confidenceMessage = '⚠️ No highly-relevant articles found. Showing loosely-related articles. Consider rephrasing your query.';
+        }
+      }
+    }
+
+    // Add confidence metadata to articles
+    relevantArticles.forEach(article => {
+      article.searchConfidence = confidence;
+    });
+
+    console.log(`Articles before filtering: ${deduplicated.length}, after filtering: ${relevantArticles.length}, confidence: ${confidence}`);
 
     // Sort by combined score: relevance + study type + recency
     const sorted = relevantArticles.sort((a, b) => {
@@ -361,13 +386,22 @@ export const searchMultipleSources = async (query, filters, sources = ['pubmed',
     console.log(`Query: "${query}"`);
     console.log(`Total articles found: ${allArticles.length}`);
     console.log(`After deduplication: ${deduplicated.length}`);
-    console.log(`After relevance filter (≥15): ${relevantArticles.length}`);
+    console.log(`After relevance filter: ${relevantArticles.length}`);
+    console.log(`Search confidence: ${confidence}`);
     console.log('\nTop 5 articles by relevance:');
     sorted.slice(0, 5).forEach((a, i) => {
       console.log(`${i + 1}. [Score: ${a.relevanceScore}] ${a.title.substring(0, 80)}...`);
     });
 
-    return sorted.slice(0, 20);
+    // Return results with metadata
+    return {
+      articles: sorted.slice(0, 20),
+      confidence: confidence,
+      confidenceMessage: confidenceMessage,
+      totalFound: allArticles.length,
+      afterDeduplication: deduplicated.length,
+      afterFiltering: relevantArticles.length
+    };
   } catch (err) {
     console.error('Multi-source search error:', err);
     throw err;
@@ -684,6 +718,60 @@ export const generateVisitNote = async (transcription) => {
     return await response.json();
   } catch (err) {
     console.error('Generate visit note error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Preprocess query to optimize for medical literature search
+ * @param {string} query - Original user query
+ * @returns {Promise<Object>} Object with originalQuery and optimizedQuery
+ */
+export const preprocessQuery = async (query) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/preprocess-query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to preprocess query: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Preprocess query error:', err);
+    throw err;
+  }
+};
+
+/**
+ * Generate alternative query suggestions when no results found
+ * @param {string} query - Original query that returned no results
+ * @returns {Promise<Object>} Object with suggestions array
+ */
+export const getQuerySuggestions = async (query) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/query-suggestions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.error || `Failed to get query suggestions: ${response.status}`);
+      error.response = { data: errorData, status: response.status };
+      throw error;
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error('Get query suggestions error:', err);
     throw err;
   }
 };

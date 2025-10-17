@@ -128,7 +128,7 @@ const calculators = {
   }
 };
 
-export const ClinicalCalculators = () => {
+export const ClinicalCalculators = ({ darkMode = false }) => {
   const [selectedCalc, setSelectedCalc] = useState(null);
   const [values, setValues] = useState({});
   const [result, setResult] = useState(null);
@@ -159,29 +159,33 @@ export const ClinicalCalculators = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4">
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-4 ${darkMode ? 'bg-transparent' : 'bg-white'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Calculator className="w-6 h-6 text-indigo-600" />
-          <h3 className="text-xl font-bold text-gray-900">Clinical Calculators</h3>
+          <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Clinical Calculators</h3>
         </div>
         <button
           onClick={() => setShowInfo(!showInfo)}
-          className="text-gray-500 hover:text-gray-700"
+          className={darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}
         >
           <Info className="w-5 h-5" />
         </button>
       </div>
 
       {showInfo && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-gray-700">
+        <div className={`border rounded-lg p-3 mb-4 text-sm ${
+          darkMode
+            ? 'bg-blue-900/30 border-blue-700 text-gray-300'
+            : 'bg-blue-50 border-blue-200 text-gray-700'
+        }`}>
           <p>Evidence-based clinical calculators for common medical assessments. All calculations are approximations and should be verified with current guidelines.</p>
         </div>
       )}
 
       {/* Calculator Selection */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
           Select Calculator
         </label>
         <select
@@ -191,7 +195,11 @@ export const ClinicalCalculators = () => {
             setValues({});
             setResult(null);
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+            darkMode
+              ? 'bg-[#1a1a1a] border-gray-600 text-gray-100 placeholder-gray-500'
+              : 'bg-white border-gray-300 text-gray-900'
+          }`}
         >
           <option value="">Choose a calculator...</option>
           {Object.entries(calculators).map(([key, calc]) => (
@@ -205,10 +213,10 @@ export const ClinicalCalculators = () => {
       {/* Input Fields */}
       {selectedCalc && (
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className={`rounded-lg p-4 space-y-3 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
             {calculators[selectedCalc].fields.map((field) => (
               <div key={field.name}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {field.label}
                 </label>
                 {field.type === 'number' && (
@@ -219,14 +227,22 @@ export const ClinicalCalculators = () => {
                     max={field.max}
                     value={values[field.name] || ''}
                     onChange={(e) => setValues({ ...values, [field.name]: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
+                      darkMode
+                        ? 'bg-[#1a1a1a] border-gray-600 text-gray-100 placeholder-gray-500'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                   />
                 )}
                 {field.type === 'select' && (
                   <select
                     value={values[field.name] || field.options[0]}
                     onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
+                      darkMode
+                        ? 'bg-[#1a1a1a] border-gray-600 text-gray-100'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                   >
                     {field.options.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -241,7 +257,7 @@ export const ClinicalCalculators = () => {
                       onChange={(e) => setValues({ ...values, [field.name]: e.target.checked })}
                       className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
                     />
-                    <span className="text-sm text-gray-600">Yes</span>
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Yes</span>
                   </label>
                 )}
               </div>
@@ -258,7 +274,11 @@ export const ClinicalCalculators = () => {
             </button>
             <button
               onClick={handleReset}
-              className="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                darkMode
+                  ? 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Reset
             </button>
@@ -266,17 +286,21 @@ export const ClinicalCalculators = () => {
 
           {/* Result */}
           {result && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className={`border rounded-lg p-4 ${
+              darkMode
+                ? 'bg-green-900/30 border-green-700'
+                : 'bg-green-50 border-green-200'
+            }`}>
               <div className="flex items-start gap-3">
                 <div className="bg-green-600 p-2 rounded-lg">
                   <Calculator className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">Result</h4>
-                  <p className="text-2xl font-bold text-green-700 mb-2">
+                  <h4 className={`font-semibold mb-1 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Result</h4>
+                  <p className={`text-2xl font-bold mb-2 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
                     {result.value} {result.unit}
                   </p>
-                  <p className="text-sm text-gray-700">{result.interpretation}</p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{result.interpretation}</p>
                 </div>
               </div>
             </div>

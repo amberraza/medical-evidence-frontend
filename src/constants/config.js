@@ -5,3 +5,4 @@ export const API_BASE_URL = 'https://optimistic-sparkle-production-f85a.up.railw
 // LocalStorage keys
 export const STORAGE_KEY = 'medicalEvidence_conversations';
 export const CURRENT_CONVERSATION_KEY = 'medicalEvidence_currentConversation';
+export const DARK_MODE_KEY = 'medicalEvidence_darkMode';

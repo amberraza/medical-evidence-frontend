@@ -18,6 +18,7 @@ import { VisitNotes } from './components/VisitNotes/VisitNotes';
 import { ClaudeLayout, ClaudeGreeting, ClaudeChatInput } from './components/Layout/ClaudeLayout';
 import { ClaudeSidebar } from './components/Layout/ClaudeSidebar';
 import * as api from './services/api';
+import { DARK_MODE_KEY } from './constants/config';
 
 export default function MedicalEvidenceTool() {
   // Custom hooks
@@ -73,6 +74,11 @@ export default function MedicalEvidenceTool() {
     return !localStorage.getItem('medicalEvidenceUserName');
   });
   const [tempUserName, setTempUserName] = useState('');
+  const [darkMode, setDarkMode] = useState(() => {
+    // Load dark mode preference from localStorage, default to false
+    const saved = localStorage.getItem(DARK_MODE_KEY);
+    return saved ? JSON.parse(saved) : false;
+  });
   const messagesEndRef = useRef(null);
 
   const toggleSource = (messageIndex, sourceIndex) => {
@@ -92,6 +98,14 @@ export default function MedicalEvidenceTool() {
     setUserName(name);
     localStorage.setItem('medicalEvidenceUserName', name);
     setShowNamePrompt(false);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(prev => {
+      const newValue = !prev;
+      localStorage.setItem(DARK_MODE_KEY, JSON.stringify(newValue));
+      return newValue;
+    });
   };
 
   useEffect(() => {
@@ -430,6 +444,8 @@ export default function MedicalEvidenceTool() {
           userName={userName}
           onToggleExperience={() => setNewExperience(false)}
           onOpenSidebar={() => setSidebarOpen(true)}
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
         >
           <ClaudeSidebar
             isOpen={sidebarOpen}
@@ -473,7 +489,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">📊 Clinical Calculators</h2>
                       <button onClick={() => setShowCalculators(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <ClinicalCalculators />
+                    <ClinicalCalculators darkMode={true} />
                   </div>
                 )}
 
@@ -483,7 +499,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">📄 Document Analysis</h2>
                       <button onClick={() => setShowDocumentUpload(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <DocumentUpload onAnalyze={handleAnalyzeDocument} onFindSimilar={handleFindSimilar} />
+                    <DocumentUpload onAnalyze={handleAnalyzeDocument} onFindSimilar={handleFindSimilar} darkMode={true} />
                   </div>
                 )}
 
@@ -493,7 +509,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">💊 Drug Information</h2>
                       <button onClick={() => setShowDrugInfo(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <DrugInfo />
+                    <DrugInfo darkMode={true} />
                   </div>
                 )}
 
@@ -503,7 +519,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">📚 Clinical Guidelines</h2>
                       <button onClick={() => setShowGuidelines(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <ClinicalGuidelines />
+                    <ClinicalGuidelines darkMode={true} />
                   </div>
                 )}
 
@@ -513,7 +529,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">🔔 Evidence Alerts</h2>
                       <button onClick={() => setShowAlerts(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <EvidenceAlerts />
+                    <EvidenceAlerts darkMode={true} />
                   </div>
                 )}
 
@@ -523,7 +539,7 @@ export default function MedicalEvidenceTool() {
                       <h2 className="text-xl font-bold text-gray-100">📝 Visit Notes</h2>
                       <button onClick={() => setShowVisitNotes(false)} className="text-gray-400 hover:text-gray-200">✕</button>
                     </div>
-                    <VisitNotes />
+                    <VisitNotes darkMode={true} />
                   </div>
                 )}
 
@@ -597,7 +613,7 @@ export default function MedicalEvidenceTool() {
 
   // Render Classic UI
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-50'}`}>
       <Header
         messages={messages}
         savedConversations={savedConversations}
@@ -612,6 +628,8 @@ export default function MedicalEvidenceTool() {
         deleteConversation={deleteConversation}
         saveCurrentConversation={saveCurrentConversation}
         clearChat={clearChat}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       {/* Toggle UI Button in Classic UI */}
@@ -627,7 +645,7 @@ export default function MedicalEvidenceTool() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          {messages.length === 0 && <EmptyState />}
+          {messages.length === 0 && <EmptyState darkMode={darkMode} />}
 
           {/* Always visible tools section */}
           <div className="space-y-4">
@@ -690,7 +708,7 @@ export default function MedicalEvidenceTool() {
 
           {messages.map((msg, idx) => (
             msg.role === 'user' ? (
-              <UserMessage key={idx} content={msg.content} />
+              <UserMessage key={idx} content={msg.content} darkMode={darkMode} />
             ) : (
               <AssistantMessage
                 key={idx}
@@ -704,11 +722,12 @@ export default function MedicalEvidenceTool() {
                 onFollowUpClick={setInput}
                 scrollToBottom={scrollToBottom}
                 isLoading={msg.isLoading}
+                darkMode={darkMode}
               />
             )
           ))}
 
-          {loading && <LoadingIndicator loadingStage={loadingStage} articleCount={articleCount} />}
+          {loading && <LoadingIndicator loadingStage={loadingStage} articleCount={articleCount} darkMode={darkMode} />}
 
           {deepResearchLoading && (
             <DeepResearchProgress
@@ -723,6 +742,7 @@ export default function MedicalEvidenceTool() {
             errorRetryable={errorRetryable}
             lastQuery={lastQuery}
             onRetry={handleSubmit}
+            darkMode={darkMode}
           />
 
           <div ref={messagesEndRef} />
@@ -742,6 +762,7 @@ export default function MedicalEvidenceTool() {
         setDeepResearchMode={setDeepResearchMode}
         onSubmit={handleSubmit}
         onKeyPress={handleKeyPress}
+        darkMode={darkMode}
       />
     </div>
   );

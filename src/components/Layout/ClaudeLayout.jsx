@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Filter, X } from 'lucide-react';
+import { Sparkles, Filter, X, Moon, Sun } from 'lucide-react';
 
-export const ClaudeLayout = ({ children, userName = "User", onToggleExperience, onOpenSidebar }) => {
+export const ClaudeLayout = ({ children, userName = "User", onToggleExperience, onOpenSidebar, darkMode, toggleDarkMode }) => {
   const currentHour = new Date().getHours();
   let greeting = "Good evening";
 
@@ -27,6 +27,15 @@ export const ClaudeLayout = ({ children, userName = "User", onToggleExperience, 
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           {/* Toggle UI Button */}
           <button
             onClick={onToggleExperience}

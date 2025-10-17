@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, FileText, X, Loader2, Search, Sparkles } from 'lucide-react';
 
-export const DocumentUpload = ({ onAnalyze, onFindSimilar }) => {
+export const DocumentUpload = ({ onAnalyze, onFindSimilar, darkMode = false }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -77,15 +77,15 @@ export const DocumentUpload = ({ onAnalyze, onFindSimilar }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4">
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-4 ${darkMode ? 'bg-transparent' : 'bg-white'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Upload className="w-6 h-6 text-indigo-600" />
-          <h3 className="text-xl font-bold text-gray-900">Document Analysis</h3>
+          <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Document Analysis</h3>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 mb-4">
+      <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
         Upload a medical research paper (PDF or TXT) to analyze its content or find similar papers.
       </p>
 
@@ -109,15 +109,19 @@ export const DocumentUpload = ({ onAnalyze, onFindSimilar }) => {
             htmlFor="file-upload"
             className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
               dragActive
-                ? 'border-indigo-500 bg-indigo-50'
-                : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
+                ? darkMode
+                  ? 'border-indigo-400 bg-indigo-900/30'
+                  : 'border-indigo-500 bg-indigo-50'
+                : darkMode
+                  ? 'border-gray-600 hover:border-indigo-400 hover:bg-gray-800/50'
+                  : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
             }`}
           >
             <Upload className="w-12 h-12 text-gray-400 mb-3" />
-            <p className="text-sm text-gray-600 font-medium mb-1">
+            <p className={`text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Click to upload or drag and drop
             </p>
-            <p className="text-xs text-gray-500">
+            <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
               PDF or TXT files (max 10MB)
             </p>
           </label>
@@ -125,12 +129,12 @@ export const DocumentUpload = ({ onAnalyze, onFindSimilar }) => {
       ) : (
         <div className="space-y-4">
           {/* File info */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className={`flex items-center justify-between p-4 rounded-lg ${darkMode ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-indigo-600" />
               <div>
-                <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{file.name}</p>
+                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                   {(file.size / 1024).toFixed(0)} KB
                 </p>
               </div>
@@ -182,7 +186,7 @@ export const DocumentUpload = ({ onAnalyze, onFindSimilar }) => {
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 text-center">
+          <p className={`text-xs text-center ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
             Analysis may take 30-60 seconds depending on document length
           </p>
         </div>

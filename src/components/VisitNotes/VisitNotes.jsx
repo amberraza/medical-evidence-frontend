@@ -3,7 +3,7 @@ import { Mic, MicOff, FileText, Download, Loader2, CheckCircle, Copy, AlertCircl
 import ReactMarkdown from 'react-markdown';
 import * as api from '../../services/api';
 
-export const VisitNotes = () => {
+export const VisitNotes = ({ darkMode = false }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState('');
   const [generatedNote, setGeneratedNote] = useState(null);
@@ -169,37 +169,45 @@ export const VisitNotes = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4">
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-4 ${darkMode ? 'bg-transparent' : 'bg-white'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FileText className="w-6 h-6 text-teal-600" />
-          <h3 className="text-xl font-bold text-gray-900">Visit Notes Transcription</h3>
+          <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Visit Notes Transcription</h3>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 mb-6">
+      <p className={`text-sm mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
         Record or type a clinical visit conversation and generate structured SOAP notes automatically.
       </p>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+        <div className={`border rounded-lg p-4 mb-4 flex items-start gap-3 ${
+          darkMode
+            ? 'bg-green-900/30 border-green-700'
+            : 'bg-green-50 border-green-200'
+        }`}>
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <p className="text-green-800 text-sm">{successMessage}</p>
+          <p className={`text-sm ${darkMode ? 'text-green-300' : 'text-green-800'}`}>{successMessage}</p>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className={`border rounded-lg p-4 mb-4 ${
+          darkMode
+            ? 'bg-red-900/30 border-red-700'
+            : 'bg-red-50 border-red-200'
+        }`}>
+          <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-800'}`}>{error}</p>
         </div>
       )}
 
       {/* Recording / Input Section */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             Visit Transcription
           </label>
           <button
@@ -232,7 +240,11 @@ export const VisitNotes = () => {
           value={transcription}
           onChange={handleTranscriptionChange}
           placeholder="Type or record the patient visit conversation here...&#10;&#10;Example:&#10;Doctor: Good morning, how are you feeling today?&#10;Patient: I've been having chest pain for the past two days.&#10;Doctor: Can you describe the pain? Is it sharp or dull?&#10;Patient: It's a sharp pain that comes and goes, especially when I take deep breaths..."
-          className="w-full h-64 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-vertical"
+          className={`w-full h-64 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-vertical ${
+            darkMode
+              ? 'bg-[#1a1a1a] border-gray-600 text-gray-100 placeholder-gray-500'
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+          }`}
           disabled={generating}
         />
 
@@ -257,25 +269,37 @@ export const VisitNotes = () => {
           <button
             onClick={handleClearAll}
             disabled={generating}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+            className={`px-6 py-3 border rounded-lg font-medium transition-colors ${
+              darkMode
+                ? 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
           >
             Clear
           </button>
         </div>
 
         {browserSupport ? (
-          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className={`mt-3 p-3 border rounded-lg ${
+            darkMode
+              ? 'bg-yellow-900/30 border-yellow-700'
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-yellow-800">
+              <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
                 <strong>Privacy Notice:</strong> Browser speech recognition uses cloud services (Google) to process audio.
                 For HIPAA compliance and sensitive medical data, consider using typed transcription or a dedicated medical transcription service.
               </p>
             </div>
           </div>
         ) : (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-800">
+          <div className={`mt-3 p-3 border rounded-lg ${
+            darkMode
+              ? 'bg-blue-900/30 border-blue-700'
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <p className={`text-xs ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
               <strong>Browser Not Supported:</strong> Speech recognition requires Chrome or Edge browser.
               You can still type or paste transcriptions manually.
             </p>
@@ -285,13 +309,17 @@ export const VisitNotes = () => {
 
       {/* Generated Note Display */}
       {generatedNote && (
-        <div className="border-t border-gray-200 pt-6">
+        <div className={`border-t pt-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">Generated SOAP Note</h4>
+            <h4 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Generated SOAP Note</h4>
             <div className="flex gap-2">
               <button
                 onClick={handleCopyNote}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
               >
                 <Copy className="w-4 h-4" />
                 Copy
@@ -306,18 +334,22 @@ export const VisitNotes = () => {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div className={`rounded-lg p-6 border ${
+            darkMode
+              ? 'bg-[#1a1a1a] border-gray-700'
+              : 'bg-gray-50 border-gray-200'
+          }`}>
             <div className="prose prose-sm max-w-none">
               <ReactMarkdown
                 components={{
-                  h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-4 mb-3 text-gray-900" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-4 mb-2 text-gray-900" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-base font-semibold mt-3 mb-2 text-gray-900" {...props} />,
-                  p: ({node, ...props}) => <p className="mb-2 text-gray-800 leading-relaxed" {...props} />,
+                  h1: ({node, ...props}) => <h1 className={`text-xl font-bold mt-4 mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
+                  h2: ({node, ...props}) => <h2 className={`text-lg font-bold mt-4 mb-2 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
+                  h3: ({node, ...props}) => <h3 className={`text-base font-semibold mt-3 mb-2 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
+                  p: ({node, ...props}) => <p className={`mb-2 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-800'}`} {...props} />,
                   ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-2 space-y-1" {...props} />,
                   ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-2 space-y-1" {...props} />,
-                  li: ({node, ...props}) => <li className="text-gray-800" {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
+                  li: ({node, ...props}) => <li className={darkMode ? 'text-gray-300' : 'text-gray-800'} {...props} />,
+                  strong: ({node, ...props}) => <strong className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`} {...props} />,
                 }}
               >
                 {generatedNote.note}
@@ -327,12 +359,16 @@ export const VisitNotes = () => {
 
           {/* Metadata */}
           {generatedNote.metadata && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className={`mt-4 p-4 border rounded-lg ${
+              darkMode
+                ? 'bg-blue-900/30 border-blue-700'
+                : 'bg-blue-50 border-blue-200'
+            }`}>
+              <p className={`text-sm ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
                 <strong>Generated:</strong> {new Date(generatedNote.metadata.generatedAt).toLocaleString()}
               </p>
               {generatedNote.metadata.wordCount && (
-                <p className="text-sm text-blue-800">
+                <p className={`text-sm ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
                   <strong>Word Count:</strong> {generatedNote.metadata.wordCount}
                 </p>
               )}
@@ -342,8 +378,12 @@ export const VisitNotes = () => {
       )}
 
       {/* Info Box */}
-      <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
-        <p className="text-sm text-teal-800">
+      <div className={`mt-6 p-4 border rounded-lg ${
+        darkMode
+          ? 'bg-teal-900/30 border-teal-700'
+          : 'bg-teal-50 border-teal-200'
+      }`}>
+        <p className={`text-sm ${darkMode ? 'text-teal-300' : 'text-teal-800'}`}>
           <strong>SOAP Format:</strong> This tool generates structured clinical notes following the SOAP format:
           <span className="font-semibold"> Subjective</span> (patient's perspective),
           <span className="font-semibold"> Objective</span> (clinical findings),

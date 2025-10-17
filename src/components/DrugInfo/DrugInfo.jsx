@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Pill, Search, Loader2, AlertCircle, CheckCircle, XCircle, Info } from 'lucide-react';
 import * as api from '../../services/api';
 
-export const DrugInfo = () => {
+export const DrugInfo = ({ darkMode = false }) => {
   const [drugName, setDrugName] = useState('');
   const [searching, setSearching] = useState(false);
   const [drugInfo, setDrugInfo] = useState(null);
@@ -33,31 +33,31 @@ export const DrugInfo = () => {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           {icon}
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <h3 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{title}</h3>
         </div>
         {Array.isArray(content) ? (
           <ul className="list-disc ml-6 space-y-2">
             {content.map((item, idx) => (
-              <li key={idx} className="text-gray-700">{item}</li>
+              <li key={idx} className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{item}</li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-700 leading-relaxed">{content}</p>
+          <p className={`leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{content}</p>
         )}
       </div>
     );
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4">
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-4 ${darkMode ? 'bg-transparent' : 'bg-white'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Pill className="w-6 h-6 text-green-600" />
-          <h3 className="text-xl font-bold text-gray-900">Drug Information</h3>
+          <h3 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Drug Information</h3>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 mb-4">
+      <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
         Search for comprehensive drug information including indications, dosing, side effects, and interactions.
       </p>
 
@@ -70,7 +70,11 @@ export const DrugInfo = () => {
               value={drugName}
               onChange={(e) => setDrugName(e.target.value)}
               placeholder="Enter drug name (e.g., Metformin, Lisinopril)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                darkMode
+                  ? 'bg-[#1a1a1a] border-gray-600 text-gray-100 placeholder-gray-500'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+              }`}
               disabled={searching}
             />
           </div>
@@ -96,26 +100,30 @@ export const DrugInfo = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+        <div className={`border rounded-lg p-4 mb-4 flex items-start gap-3 ${
+          darkMode
+            ? 'bg-red-900/30 border-red-700'
+            : 'bg-red-50 border-red-200'
+        }`}>
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-red-800 font-medium">Error</p>
-            <p className="text-red-700 text-sm">{error}</p>
+            <p className={`font-medium ${darkMode ? 'text-red-400' : 'text-red-800'}`}>Error</p>
+            <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>{error}</p>
           </div>
         </div>
       )}
 
       {/* Drug Information Display */}
       {drugInfo && (
-        <div className="border-t border-gray-200 pt-6">
+        <div className={`border-t pt-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           {/* Drug Name Header */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{drugInfo.drugName}</h2>
+            <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{drugInfo.drugName}</h2>
             {drugInfo.genericName && (
-              <p className="text-gray-600">Generic: {drugInfo.genericName}</p>
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Generic: {drugInfo.genericName}</p>
             )}
             {drugInfo.brandNames && drugInfo.brandNames.length > 0 && (
-              <p className="text-gray-600">Brand Names: {drugInfo.brandNames.join(', ')}</p>
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Brand Names: {drugInfo.brandNames.join(', ')}</p>
             )}
           </div>
 
@@ -144,8 +152,12 @@ export const DrugInfo = () => {
           {renderSection('Monitoring Parameters', drugInfo.monitoring, <Info className="w-5 h-5 text-blue-600" />)}
 
           {/* Disclaimer */}
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800">
+          <div className={`mt-6 p-4 border rounded-lg ${
+            darkMode
+              ? 'bg-yellow-900/30 border-yellow-700'
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <p className={`text-sm ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
               <strong>Disclaimer:</strong> This information is for educational purposes only and should not replace professional medical advice.
               Always consult with a healthcare provider before starting, stopping, or changing medication.
             </p>
@@ -155,7 +167,7 @@ export const DrugInfo = () => {
 
       {/* Empty State */}
       {!drugInfo && !searching && !error && (
-        <div className="text-center py-8 text-gray-500">
+        <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           <Pill className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p>Enter a drug name to view detailed information</p>
         </div>

@@ -1,6 +1,14 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+// Decode HTML entities in text
+const decodeHTMLEntities = (text) => {
+  if (!text) return text;
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
 // Color mapping for badges (Tailwind needs full class names)
 const getBadgeClasses = (color) => {
   const colorMap = {
@@ -70,7 +78,7 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
           )}
 
           {/* Metadata Badges */}
-          {(source.studyType || source.isRecent || source.source || source.hasFullText) && (
+          {(source.studyType || source.isRecent || source.source || source.hasFullText || source.fullTextAvailable || source.citationCount) && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {source.source && (
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -81,9 +89,28 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
                   {source.source === 'Europe PMC' ? 'Europe PMC' : 'PubMed'}
                 </span>
               )}
-              {source.hasFullText && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-lime-100 text-lime-800">
-                  Full Text
+              {/* Citation Count Badge */}
+              {source.citationCount > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800 border border-rose-200">
+                  📊 {source.citationCount.toLocaleString()} citations
+                </span>
+              )}
+              {/* Full Text PDF Badge (Unpaywall) */}
+              {(source.fullTextAvailable || source.hasFullText) && (
+                <a
+                  href={source.fullTextPdfUrl || source.fullTextUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-lime-100 text-lime-800 border border-lime-200 hover:bg-lime-200 transition-colors"
+                  title={source.openAccessType || 'Full text available'}
+                >
+                  📄 Free PDF
+                </a>
+              )}
+              {/* Open Access Badge */}
+              {source.isOpenAccess && !source.fullTextPdfUrl && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                  🔓 Open Access
                 </span>
               )}
               {source.studyType && (
@@ -128,7 +155,7 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
                 <div className="bg-white rounded border border-gray-200 p-3 mb-2">
                   <h4 className="font-semibold text-gray-900 text-xs mb-2">Abstract</h4>
                   <p className="text-gray-700 text-xs leading-relaxed whitespace-pre-wrap">
-                    {source.abstract}
+                    {decodeHTMLEntities(source.abstract)}
                   </p>
                   {source.allAuthors && source.allAuthors !== source.authors && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
@@ -136,6 +163,83 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
                       <p className="text-gray-600 text-xs">{source.allAuthors}</p>
                     </div>
                   )}
+
+                  {/* Enrichment Data Section */}
+                  {(source.publisher || source.funding || source.orcids || source.license || source.openAccessType) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                      <h4 className="font-semibold text-gray-900 text-xs mb-2">📊 Additional Information</h4>
+
+                      {source.publisher && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Publisher: </span>
+                          <span className="text-gray-700 text-xs">{source.publisher}</span>
+                        </div>
+                      )}
+
+                      {source.funding && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Funding: </span>
+                          <span className="text-gray-700 text-xs">{source.funding}</span>
+                        </div>
+                      )}
+
+                      {source.orcids && source.orcids.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">ORCID IDs: </span>
+                          <span className="text-gray-700 text-xs">
+                            {source.orcids.map((orcid, idx) => (
+                              <a
+                                key={idx}
+                                href={orcid}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-indigo-600 hover:text-indigo-800 hover:underline mr-2"
+                              >
+                                {orcid.replace('https://orcid.org/', '')}
+                              </a>
+                            ))}
+                          </span>
+                        </div>
+                      )}
+
+                      {source.license && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">License: </span>
+                          <span className="text-gray-700 text-xs">{source.license}</span>
+                        </div>
+                      )}
+
+                      {source.openAccessType && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Access Type: </span>
+                          <span className="text-gray-700 text-xs">{source.openAccessType}</span>
+                        </div>
+                      )}
+
+                      {source.allOALocations && source.allOALocations.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Alternative Sources: </span>
+                          <div className="mt-1 space-y-1">
+                            {source.allOALocations.slice(0, 3).map((location, idx) => (
+                              <div key={idx} className="text-xs">
+                                <a
+                                  href={location.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                                >
+                                  {location.hostType === 'publisher' ? '📘 Publisher' : '🗄️ Repository'}
+                                  {location.version && ` (${location.version})`}
+                                  {location.pdfUrl && ' - PDF'}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {source.doi && (
                     <div className="mt-2">
                       <p className="text-gray-500 text-xs">DOI: {source.doi}</p>

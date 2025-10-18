@@ -82,11 +82,12 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
             <div className="flex flex-wrap gap-1.5 mt-2">
               {source.source && (
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                  source.source === 'Europe PMC'
-                    ? 'bg-sky-100 text-sky-800'
-                    : 'bg-teal-100 text-teal-800'
+                  source.source === 'Europe PMC' ? 'bg-sky-100 text-sky-800' :
+                  source.source === 'OpenAlex' ? 'bg-orange-100 text-orange-800' :
+                  source.source === 'ClinicalTrials.gov' ? 'bg-indigo-100 text-indigo-800' :
+                  'bg-teal-100 text-teal-800'
                 }`}>
-                  {source.source === 'Europe PMC' ? 'Europe PMC' : 'PubMed'}
+                  {source.source}
                 </span>
               )}
               {/* Citation Count Badge */}
@@ -161,6 +162,80 @@ export const SourceCard = ({ source, index, isExpanded, onToggle }) => {
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <h4 className="font-semibold text-gray-900 text-xs mb-1">All Authors</h4>
                       <p className="text-gray-600 text-xs">{source.allAuthors}</p>
+                    </div>
+                  )}
+
+                  {/* Clinical Trial Specific Info */}
+                  {source.type === 'clinical-trial' && (source.status || source.phase || source.enrollment || source.conditions || source.interventions) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                      <h4 className="font-semibold text-gray-900 text-xs mb-2">🔬 Trial Information</h4>
+
+                      {source.nctId && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">NCT ID: </span>
+                          <span className="text-gray-700 text-xs font-mono">{source.nctId}</span>
+                        </div>
+                      )}
+
+                      {source.status && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Status: </span>
+                          <span className={`text-xs font-medium ${
+                            source.status === 'COMPLETED' ? 'text-green-700' :
+                            source.status === 'RECRUITING' ? 'text-blue-700' :
+                            'text-gray-700'
+                          }`}>{source.status}</span>
+                        </div>
+                      )}
+
+                      {source.phase && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Phase: </span>
+                          <span className="text-gray-700 text-xs">{source.phase}</span>
+                        </div>
+                      )}
+
+                      {source.enrollment > 0 && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Enrollment: </span>
+                          <span className="text-gray-700 text-xs">{source.enrollment.toLocaleString()} participants</span>
+                        </div>
+                      )}
+
+                      {source.conditions && source.conditions.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Conditions: </span>
+                          <span className="text-gray-700 text-xs">{source.conditions.slice(0, 3).join(', ')}</span>
+                        </div>
+                      )}
+
+                      {source.interventions && source.interventions.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Interventions: </span>
+                          <span className="text-gray-700 text-xs">{source.interventions.slice(0, 3).join(', ')}</span>
+                        </div>
+                      )}
+
+                      {source.leadSponsor && (
+                        <div>
+                          <span className="text-gray-500 text-xs font-medium">Sponsor: </span>
+                          <span className="text-gray-700 text-xs">{source.leadSponsor}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* OpenAlex Specific Info */}
+                  {source.concepts && source.concepts.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-900 text-xs mb-2">🏷️ Concepts</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {source.concepts.slice(0, 5).map((concept, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
+                            {concept}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
 
